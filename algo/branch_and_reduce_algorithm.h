@@ -30,7 +30,7 @@
 #ifdef USE_IFC
 #include "../extern/InertialFlowCutter/include/inertial_flow_cutter.h"
 #endif
-#include "../Metis/include/metis.h"
+#include "metis.h"
 
 #include "tools/debug_info_logger.h"
 
@@ -51,6 +51,8 @@
 #include "separator_refinement/fm_ns_local_search.h"
 #include "data_structures/dyn_fast_set.h"
 #include "data_structures/ArraySet.h"
+
+#include "../gnn/gcn.h"
 
 class branch_and_reduce_algorithm
 {
@@ -106,6 +108,9 @@ public:
 	int rootDepth;
 	int n;
 	int N;
+
+	gcn model;
+	gcn_data model_data;
 
 	/**
 	 * current best solution

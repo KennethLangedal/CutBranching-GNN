@@ -52,22 +52,23 @@ void setParams(int argc)
 
 int main(int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 4)
         exit(-1);
 
     string instances_path = argv[1];
     string out_path = argv[2];
+    string model_path = argv[3];
 
-    if (argc > 3)
-        branching_strat = atoi(argv[3]);
     if (argc > 4)
-        tuningParam1 = atoi(argv[4]);
+        branching_strat = atoi(argv[4]);
     if (argc > 5)
-        tuningParam2 = atof(argv[5]);
+        tuningParam1 = atoi(argv[5]);
     if (argc > 6)
-        tuningParam3 = atoi(argv[6]); 
+        tuningParam2 = atof(argv[6]);
+    if (argc > 7)
+        tuningParam3 = atoi(argv[7]); 
 
-    setParams(argc);
+    setParams(argc - 1);
 
     
     string out_path_log = out_path + "/log_" + to_string(branching_strat) + "_" 
@@ -86,7 +87,10 @@ int main(int argc, char **argv)
     {
         branch_and_reduce_algorithm::USE_DEPENDENCY_CHECKING = false;
     }
-    
+
+    FILE *f = fopen(model_path.data(), "r");
+    gcn model = gcn_parse(f);
+    fclose(f);
     
     for (const auto &entry : std::filesystem::directory_iterator(instances_path))
     {
@@ -99,16 +103,23 @@ int main(int argc, char **argv)
             for (auto entr: adj)
                 M += entr.size();
 
+            int *V = (int *)malloc(sizeof(int) * N * 2);
+            int *E = (int *)malloc(sizeof(int) * M * 2);
+            
+            gcn_data model_data = gcn_data_init(N * 2, V, E);
+
             debug_info_logger logger(entry.path().filename(), N, M/2);
              
             branch_and_reduce_algorithm::resetStatistics();
             branch_and_reduce_algorithm algo = branch_and_reduce_algorithm(adj, adj.size());
             algo.logger = &logger;
+            algo.model = model;
+            algo.model_data = model_data;
             timer t;
             std::cout << "start" << std::endl;
             t.restart();
 
-            int vcSize = algo.solve(t, 28800);
+            int vcSize = algo.solve(t, 1800);
             double secs = t.elapsed();
 
             Result res(entry.path().filename(), algo.nBranchings, secs, N - vcSize);
@@ -123,6 +134,10 @@ int main(int argc, char **argv)
 
             writeResultToFile(res, out_path);
             logger.write_log(out_path_log);
+
+            gcn_data_free(model_data);
+            free(V);
+            free(E);
         }
     }
 

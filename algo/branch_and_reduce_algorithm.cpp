@@ -2869,6 +2869,57 @@ void branch_and_reduce_algorithm::branching(timer &t, double time_limit)
 
         dv = deg(v);
     }
+    else if (BRANCHING == 14) // Machine learning
+    {
+        static std::vector<int> new_id(N, 0), old_id(N, 0);
+        if (new_id.size() < n)
+        {
+            new_id.resize(n);
+            old_id.resize(n);
+        }
+        
+        int next_label = 0;
+        
+        for (int i = 0; i < n; i++)
+        {
+            if (x[i] < 0)
+            {
+                new_id[i] = next_label;
+                old_id[next_label] = i;
+                next_label++;
+            }
+        }
+        
+        model_data.N = next_label;
+        model_data.V[0] = 0;
+        
+        for (int i = 0; i < model_data.N; i++)
+        {
+            model_data.V[i + 1] = model_data.V[i];
+            for (int j : adj[old_id[i]])
+            {
+                if (x[j] < 0)
+                {
+                    model_data.E[model_data.V[i + 1]] = new_id[j];
+                    model_data.V[i + 1]++;
+                }
+            }
+        }
+        
+        gcn_eval(model, model_data);
+        
+        int best = 0;
+        for (int i = 1; i < model_data.N; i++)
+        {
+            if (model_data.y[i] > model_data.y[best])
+            {
+                best = i;
+            }
+        }
+        
+        v = old_id[best];
+        dv = deg(v);
+    }
     else if (BRANCHING == 20) // st - cut refinement
     {
         int cut_size = 0;
@@ -3204,6 +3255,8 @@ void branch_and_reduce_algorithm::branching(timer &t, double time_limit)
     // optimal branch order
     crntBest = opt;
 
+    nBranchings++;
+
     if (lb >= opt)
     {
         if (startingSolutionIsBest)
@@ -3213,7 +3266,6 @@ void branch_and_reduce_algorithm::branching(timer &t, double time_limit)
         deb_info.add_stats.emplace_back("true_branching: ", 0);
         return;
     }
-    nBranchings++;
     deb_info.add_stats.emplace_back("true_branching: ", 1);
 
     if (defaultBranch)
@@ -3518,6 +3570,8 @@ bool branch_and_reduce_algorithm::decompose(timer &t, double time_limit)
             }
 
             vcs[i] = new branch_and_reduce_algorithm(adj2, size[i]);
+            vcs[i]->model = model;
+            vcs[i]->model_data = model_data;
 
             // inherit nd branching order ypp
             std::vector<int> sub_nd_order(0);

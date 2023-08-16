@@ -16,7 +16,7 @@ Input graphs have to be undirected and must not contain duplicate edges or self-
 Run
 
 ```shell
-./MIS <graph_dir_path> <output_path> [<strat>]
+./MIS <graph_dir_path> <output_path> <model> [<strat>]
 ```
 to compute a MIS for all graphs in `graph_dir_path`. The result is written to the `output_path`directory. The other parameters are optional and control which strategy is used and how it is parameterized. Details on the different strategies can be found in our paper. By default, max. deg. branching is used. Viable option for the strategies are: 
 
@@ -30,6 +30,8 @@ to compute a MIS for all graphs in `graph_dir_path`. The result is written to th
 - `7` for funnel-reduction-based branching
 - `8` for unconfined-reduction-based branching
 - `9` for combined branching
+- `10` for packing-based branching
+- `14` for GCN-based branching
 
 ## Paper
 

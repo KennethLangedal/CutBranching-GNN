@@ -46,6 +46,8 @@ std::vector<std::vector<int>> readGraph(std::istream &infile)
 
         int u, v;
         iss >> u >> v;
+        u--;
+        v--;
 
         if (u < 0 || u >= numVertices)
         {
@@ -64,11 +66,13 @@ std::vector<std::vector<int>> readGraph(std::istream &infile)
         }
 
         graph[u].push_back(v);
+        graph[v].push_back (u);
     }
 
     for (int i = 0; i < numVertices; ++i)
     {
         std::sort(graph[i].begin(), graph[i].end());
+        graph[i].erase(std::unique(graph[i].begin (), graph[i].end ()), graph[i].end ());
     }
 
     return graph;
